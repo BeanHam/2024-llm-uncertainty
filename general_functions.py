@@ -195,66 +195,64 @@ def get_default_trainer(model: AutoModel,
 def evaluate_model(model: AutoModelForCausalLM, 
                    tokenizer: AutoTokenizer, 
                    data: Iterable,
-                   max_tokens: int=2048,
+                   max_tokens: int=1024,
                    min_new_tokens: int=1,
-                   max_new_tokens: int=256,
+                   max_new_tokens: int=32,
+                   num_return_sequences: int=5,
                    remove_suffix: str=None) -> dict:
     """
     Evaluate a Hugging Face model on a dataset using three text summarization metrics.
     """
     
-    model_outputs = []
     accuracy = []
-    
+    confidence = []
+    system="""## TASK: 
+    You are a helpful multiple-choice question-answering assistant! 
+    I will provide you with a question and four choices. Only one choice is the correct answer. 
+    Please use the provided evidence to select the correct answer and return your confidence.
+    Please use the following example output format: ## ANSWER: {1}. ## CONFIDENCE: {80%}."""
+
     # Iterate over the test set
     for idx in tqdm(range(len(data))):
+
+        question=f"\n\n## QUESTION:\n{data['question_sentence'][idx]}"
+        evidence=f"\n\n## EVIDENCE:\n{data['evidence'][idx]}"
+        choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][idx][j] for j in range(len(data['choices'][idx]))]}"
+        user_input=system+question+evidence+choices+"\n\n## ANSWER:"
+        chat = [{"role": "user", "content": user_input}]
+        input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
         
-        chat = [{"role": "user", "content": data['input'][idx]}]
-        input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)    
-        
-        ## decoding
-        decoded = generate_from_prompt(model=model, 
-                                       tokenizer=tokenizer, 
-                                       input_data=input_data, 
-                                       max_tokens=max_tokens,
-                                       min_new_tokens=min_new_tokens,
-                                       max_new_tokens=max_new_tokens)
+        # Calculate the position of the start of the output string
+        start_decode = len(tokenizer.encode(input_data, truncation=True, max_length=max_tokens))
+        input_ids = tokenizer(input_data, return_tensors='pt', truncation=True, max_length=max_tokens).to(model.device)
+        with torch.no_grad():
+            output = model.generate(**input_ids, 
+                                    max_new_tokens=max_new_tokens, 
+                                    min_new_tokens=min_new_tokens, 
+                                    num_return_sequences=num_return_sequences,
+                                    pad_token_id=tokenizer.eos_token_id)
+        decoded = [[float(j) for j in tokenizer.decode(i[start_decode:]).\
+                                      replace(remove_suffix, '').\
+                                      translate(str.maketrans('', '', """!"#$%&\'()*+,-/.:;<=>?@[\\]^_`{|}~""")).\
+                                      split() if j.isnumeric()] for i in output]
 
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
-        decoded = decoded.replace(remove_suffix, '').split()[0]
-        gt=data['output'][idx]
+        summary={}
+        for k, v in decoded:
+            if k in summary:summary[k].append(v)
+            else:summary[k]=[v]
+        avg_conf = {k: np.mean(summary[k]) for k in summary}
+        pred=max(avg_conf, key=avg_conf.get)
+        conf=avg_conf[pred]
+        gt=float(data['answer'][idx])
         
         # metric calculation
-        model_outputs.append(decoded)
-        accuracy.append(gt == decoded)
-        
+        accuracy.append(gt == pred)
+        confidence.append(conf)
+
     metrics = {
         'accuracy':np.mean(accuracy),
+        'confidence':np.mean(confidence),
     }
     
-    return model_outputs, metrics
-
-def generate_from_prompt(model: AutoModelForCausalLM, 
-                         tokenizer: AutoTokenizer, 
-                         input_data: str,
-                         max_tokens: int=2048,
-                         min_new_tokens: int=1,
-                         max_new_tokens: int=256) -> str:
-    """
-    Generate and decode output from a Transformers model using a prompt.
-    """
-
-    # Calculate the position of the start of the output string
-    start_decode = len(tokenizer.encode(input_data, truncation=True, max_length=max_tokens))
-
-    # Encode the input string
-    input_ids = tokenizer(input_data, return_tensors='pt', truncation=True, max_length=max_tokens).to(model.device)
-
-    # Generate text from prompt
-    with torch.no_grad():
-        output = model.generate(**input_ids, max_new_tokens=max_new_tokens, min_new_tokens=min_new_tokens, pad_token_id=tokenizer.eos_token_id)
-        
-    # Decode the output string, removing the special tokens and any suffixes
-    decoded = tokenizer.decode(output[0][start_decode:])
-
-    return decoded
+    return metrics
