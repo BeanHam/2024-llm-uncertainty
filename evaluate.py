@@ -1,4 +1,5 @@
 import os
+import gc
 import json
 import torch
 import argparse
@@ -28,7 +29,7 @@ def main():
     parser.add_argument('--device', type=str, default='cuda', help='The device to mount the model on.')
     parser.add_argument('--hf_token_var', type=str, default='[your token]', help='hf login token')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
-    args = parser.parse_args(args=[])
+    args = parser.parse_args()
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
     args.save_path=f'inference_results/'
     if args.hf_token_var:
@@ -41,7 +42,7 @@ def main():
     # ----------------------
     print('Downloading and preparing data...')
     data = get_dataset_slices(args.dataset)
-    test_data = data['test']
+    test_data = data['test'].select(range(5))
     test_data.set_format(type='torch', device='cuda')
     
     # ----------------------
@@ -52,7 +53,7 @@ def main():
         checkpoints.remove('.ipynb_checkpoints')
     if 'runs' in checkpoints:
         checkpoints.remove('runs')
-        
+    
     for checkpoint in checkpoints:
 
         #-----------------------
@@ -77,6 +78,12 @@ def main():
 
         for k, v in metrics.items(): print(f'   {k}: {v}')
         with open(args.save_path+f"checkpoint.json", 'w') as f: json.dump(metrics, f)
+
+        ## clear cache
+        model.cpu()
+        del model, checkpoint
+        gc.collect()
+        torch.cuda.empty_cache()
 
 if __name__ == "__main__":
     main()

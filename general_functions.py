@@ -233,6 +233,7 @@ def evaluate_model(model: AutoModelForCausalLM,
                                     pad_token_id=tokenizer.eos_token_id)
         decoded = [[float(j) for j in tokenizer.decode(i[start_decode:]).\
                                       replace(remove_suffix, '').\
+                                      replace('</a>', '').\
                                       translate(str.maketrans('', '', """!"#$%&\'()*+,-/.:;<=>?@[\\]^_`{|}~""")).\
                                       split() if j.isnumeric()] for i in output]
 
