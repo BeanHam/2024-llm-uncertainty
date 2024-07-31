@@ -4,7 +4,7 @@ from transformers import BitsAndBytesConfig, TrainingArguments
 MODEL_SUFFIXES = {
     'openai': '',
     'mistral': '</s>',
-    'llama3': '</s>',
+    'llama3': '<|eot_id|>',
     'falcon': '<|endoftext|>',
     'opt-finetune': '</s>',
 }
