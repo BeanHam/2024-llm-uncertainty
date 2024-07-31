@@ -132,7 +132,6 @@ if __name__ == '__main__':
             logging_steps=args.logging_steps,
             resume_from_checkpoint=args.resume_from_checkpoint == 'True',
             max_steps=args.max_steps,
-            load_best_model_at_end=True,
             num_train_epochs=args.epoch,
         )
         
@@ -158,3 +157,7 @@ if __name__ == '__main__':
     # Fine-tune model
     print('Fine-tuning model...')
     trainer.train()
+
+    print('Saving model and tokenizer...')
+    trainer.model.save_pretrained(args.output_dir)
+    tokenizer.save_pretrained(args.output_dir)
