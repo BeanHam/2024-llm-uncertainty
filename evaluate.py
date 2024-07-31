@@ -48,6 +48,11 @@ def main():
     # Checkpoints
     # ----------------------
     checkpoints = os.listdir('outputs_llama3/')
+    if '.ipynb_checkpoints' in checkpoints:
+        checkpoints.remove('.ipynb_checkpoints')
+    if 'runs' in checkpoints:
+        checkpoints.remove('runs')
+        
     for checkpoint in checkpoints:
 
         #-----------------------
