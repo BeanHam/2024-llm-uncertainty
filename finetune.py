@@ -158,8 +158,3 @@ if __name__ == '__main__':
     # Fine-tune model
     print('Fine-tuning model...')
     trainer.train()
-
-    # Save model to hub
-    if args.hub_upload == 'True':
-        print('Saving model to hub...')
-        trainer.model.push_to_hub(args.hub_save_id, use_auth_token=True)
