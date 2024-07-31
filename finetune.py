@@ -65,10 +65,13 @@ if __name__ == '__main__':
     
     # change saving directory
     args.output_dir = 'outputs_'+args.use_model_prompt_defaults
+    args.save_dir = 'outputs_'+args.use_model_prompt_defaults+'/final_model/'
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
     # make first level directories
     if not path.exists(args.output_dir):
         makedirs(args.output_dir)
+    if not path.exists(args.save_dir):
+        makedirs(args.save_dir)    
 
     # HF Login
     hf_login()
@@ -159,5 +162,5 @@ if __name__ == '__main__':
     trainer.train()
 
     print('Saving model and tokenizer...')
-    trainer.model.save_pretrained(args.output_dir)
-    tokenizer.save_pretrained(args.output_dir)
+    trainer.model.save_pretrained(args.save_dir)
+    tokenizer.save_pretrained(args.save_dir)
