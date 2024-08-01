@@ -237,12 +237,15 @@ def evaluate_model(model: AutoModelForCausalLM,
 
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
         summary={}
+        total=0
         for k, v in decoded:
-            if k in summary:summary[k].append(v)
-            else:summary[k]=[v]
-        avg_conf = {k: np.mean(summary[k]) for k in summary}
-        pred=max(avg_conf, key=avg_conf.get)
-        conf=avg_conf[pred]
+            total+=v
+            if k in summary: summary[k]+=v
+            else:summary[k]=v
+        for k in summary:
+            summary[k]/=total
+        pred=max(summary, key=summary.get)
+        conf=summary[pred]
         gt=float(data['answer'][idx])
         
         # metric calculation
