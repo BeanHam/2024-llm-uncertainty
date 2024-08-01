@@ -231,11 +231,8 @@ def evaluate_model(model: AutoModelForCausalLM,
                                     min_new_tokens=min_new_tokens, 
                                     num_return_sequences=num_return_sequences,
                                     pad_token_id=tokenizer.eos_token_id)
-        decoded = [[float(j) for j in tokenizer.decode(i[start_decode:]).\
-                                      replace(remove_suffix, '').\
-                                      replace('</a>', '').\
-                                      translate(str.maketrans('', '', """!"#$%&\'()*+,-/.:;<=>?@[\\]^_`{|}~""")).\
-                                      split() if j.isnumeric()] for i in output]
+        decoded = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]
+        decoded = [[float(j) for j in re.sub(r'[^\w\s]', ' ', d).split() if j.isnumeric()] for d in decoded]
 
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
         summary={}
