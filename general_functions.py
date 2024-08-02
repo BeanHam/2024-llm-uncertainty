@@ -148,9 +148,11 @@ def format_data_as_instructions(data: Mapping,
 
     output_texts = []
     system="""## TASK: 
-    You are a helpful multiple-choice question-answering assistant! 
-    I will provide you with a question and four choices. Only one choice is the correct answer. 
-    Please use the provided evidence to select the correct answer."""
+    You are a helpful multiple choice question-answering assistant! 
+
+    I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
+
+    Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer."""     
 
     # Iterate over the data and format the text
     for i in tqdm(range(len(data['question_sentence'])), desc='Formatting data'):
@@ -211,9 +213,16 @@ def evaluate_model(model: AutoModelForCausalLM,
     You are a helpful multiple-choice question-answering assistant! 
     I will provide you with a question and four choices. Only one choice is the correct answer. 
     Please use the provided evidence to select the correct answer and return your confidence.
-    Please use the following example output format: ## ANSWER: {1}. ## CONFIDENCE: {80%}.
+    Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}.
     No explaination is needed."""
 
+    system="""## TASK: 
+    You are a helpful multiple choice question-answering assistant! 
+
+    I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
+
+    Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer.""" 
+                       
     # Iterate over the test set
     for idx in tqdm(range(len(data))):
 
