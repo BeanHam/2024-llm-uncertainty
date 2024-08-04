@@ -201,7 +201,7 @@ def evaluate_model(model: AutoModelForCausalLM,
                    max_tokens: int=1024,
                    min_new_tokens: int=1,
                    max_new_tokens: int=32,
-                   num_return_sequences: int=5,
+                   num_return_sequences: int=10,
                    remove_suffix: str=None) -> dict:
     """
     Evaluate a Hugging Face model on a dataset using three text summarization metrics.
@@ -226,7 +226,7 @@ def evaluate_model(model: AutoModelForCausalLM,
         question=f"\n\n## QUESTION:\n{data['question_sentence'][idx]}"
         evidence=f"\n\n## EVIDENCE:\n{data['evidence'][idx]}"
         choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][idx][j] for j in range(len(data['choices'][idx]))]}"
-        user_input=system+question+evidence+choices+"\n\n## ANSWER:"
+        user_input=system+question+evidence+choices
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
         
@@ -241,6 +241,7 @@ def evaluate_model(model: AutoModelForCausalLM,
                                     pad_token_id=tokenizer.eos_token_id)
         decoded = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]
         decoded = [[float(j) for j in re.sub(r'[^\w\s]', ' ', d).split() if j.isnumeric()] for d in decoded]
+        decoded = [d for d in decoded if len(d)==2]
 
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
         summary={}
