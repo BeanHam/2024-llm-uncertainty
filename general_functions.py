@@ -246,7 +246,7 @@ def evaluate_model(model: AutoModelForCausalLM,
             d = re.sub(r'[^\w\s]', ' ', d)
             if d.split()[0].isnumeric(): answer = float(d.split()[0])
             else: answer = float(d.split('ANSWER')[1].split()[0])
-            confid = float(re.sub(r'[^\w\s]', ' ', d.split('CONFIDENCE')[1]))
+            confid = float(d.split('CONFIDENCE')[1].split()[0])
             if ( (answer <= 4.0) & (confid <= 100.0) ):
                 decoded.append([answer, confid])
         print(decoded[0])
