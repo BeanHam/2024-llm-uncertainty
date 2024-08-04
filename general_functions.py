@@ -218,7 +218,7 @@ def evaluate_model(model: AutoModelForCausalLM,
 
     Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}.
 
-    No explaination is needed."""
+    No explaination is needed. Do NOT output the content of the choice answer. Only output the answer index. """
                        
     # Iterate over the test set
     for idx in tqdm(range(len(data))):
