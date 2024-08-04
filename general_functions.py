@@ -215,10 +215,10 @@ def evaluate_model(model: AutoModelForCausalLM,
     I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
 
     Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer.
-
-    No explaination is needed. Do NOT repeat the content of the choice answer. 
     
-    Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. """
+    Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. 
+    
+    No explaination is needed. Do NOT repeat the content of the choice answer. """
                        
     # Iterate over the test set
     for idx in tqdm(range(len(data))):
