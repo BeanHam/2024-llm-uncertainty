@@ -221,7 +221,7 @@ def evaluate_model(model: AutoModelForCausalLM,
     No explaination is needed."""
                        
     # Iterate over the test set
-    for idx in tqdm(range(14, len(data))):
+    for idx in tqdm(range(len(data))):
 
         question=f"\n\n## QUESTION:\n{data['question_sentence'][idx]}"
         evidence=f"\n\n## EVIDENCE:\n{data['evidence'][idx]}"
@@ -239,19 +239,19 @@ def evaluate_model(model: AutoModelForCausalLM,
                                     min_new_tokens=min_new_tokens, 
                                     num_return_sequences=num_return_sequences,
                                     pad_token_id=tokenizer.eos_token_id)
-        output = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]    
-        for i in output:
-            print(i)
+        output = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]
         decoded = []
         for d in output:
-            d = re.sub(r'[^\w\s]', ' ', d)
-            if d.split()[0].isnumeric(): answer = float(d.split()[0])
-            else: answer = float(d.split('ANSWER')[1].split()[0])
-            confid = float(d.split('CONFIDENCE')[1].split()[0])
-            if ( (answer <= 4.0) & (confid <= 100.0) ):
-                decoded.append([answer, confid])
-        print(decoded[0])
-
+            try:
+                d = re.sub(r'[^\w\s]', ' ', d)
+                if d.split()[0].isnumeric(): answer = float(d.split()[0])
+                else: answer = float(d.split('ANSWER')[1].split()[0])
+                confid = float(d.split('CONFIDENCE')[1].split()[0])
+                if ( (answer <= 4.0) & (confid <= 100.0) ):
+                    decoded.append([answer, confid])
+            except:
+                next
+                
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
         summary={}
         total=0
@@ -261,6 +261,7 @@ def evaluate_model(model: AutoModelForCausalLM,
             else:summary[k]=v
         for k in summary:
             summary[k]/=total
+        print(summary)
         pred=max(summary, key=summary.get)
         conf=summary[pred]
         gt=float(data['answer'][idx])
