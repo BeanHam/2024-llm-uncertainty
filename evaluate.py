@@ -55,7 +55,11 @@ def main():
         checkpoints.remove('runs')
     
     for checkpoint in checkpoints:
-
+        
+        if checkpoint == 'final_model':
+            continue
+        print(checkpoint...)
+        
         #-----------------------
         # load model & tokenizer
         #-----------------------
@@ -77,7 +81,7 @@ def main():
                                   remove_suffix=args.suffix)
 
         for k, v in metrics.items(): print(f'   {k}: {v}')
-        with open(args.save_path+f"checkpoint.json", 'w') as f: json.dump(metrics, f)
+        with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
 
         ## clear cache
         model.cpu()
