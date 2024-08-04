@@ -246,9 +246,9 @@ def evaluate_model(model: AutoModelForCausalLM,
             d = re.sub(r'[^\w\s]', ' ', d)
             if d.split()[0].isnumeric(): answer = float(d.split()[0])
             else: answer = float(d.split('ANSWER')[1].split()[0])
-            confidence = float(re.sub(r'[^\w\s]', ' ', d.split('CONFIDENCE')[1]))
-            if ( (answer <= 4.0) & (confidence <= 100.0) ):
-                decoded.append([answer, confidence])
+            confid = float(re.sub(r'[^\w\s]', ' ', d.split('CONFIDENCE')[1]))
+            if ( (answer <= 4.0) & (confid <= 100.0) ):
+                decoded.append([answer, confid])
         print(decoded[0])
 
         # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
