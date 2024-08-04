@@ -56,7 +56,7 @@ def main():
     
     for checkpoint in checkpoints:
         
-        if checkpoint == 'final_model':
+        if checkpoint in ['final_model', 'checkpoint-18']:
             continue
         print(checkpoint)
         
