@@ -58,7 +58,7 @@ def main():
         
         if checkpoint == 'final_model':
             continue
-        print(checkpoint...)
+        print(checkpoint)
         
         #-----------------------
         # load model & tokenizer
