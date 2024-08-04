@@ -249,26 +249,29 @@ def evaluate_model(model: AutoModelForCausalLM,
                 confid = float(d.split('CONFIDENCE')[1].split()[0])
                 if ( (answer <= 4.0) & (confid <= 100.0) ):
                     decoded.append([answer, confid])
+            ## sometimes, the model does not return confidence
             except:
                 next
-                
-        # Remove the suffix if specified - note that Mistral-Instruct models add a </s> suffix to specify the end of the output
-        summary={}
-        total=0
-        for k, v in decoded:
-            total+=v
-            if k in summary: summary[k]+=v
-            else:summary[k]=v
-        for k in summary:
-            summary[k]/=total
-        print(summary)
-        pred=max(summary, key=summary.get)
-        conf=summary[pred]
-        gt=float(data['answer'][idx])
         
-        # metric calculation
-        accuracy.append(gt == pred)
-        confidence.append(conf)
+        if len(decoded) == 0:
+            next
+        else:
+            summary={}
+            total=0
+            for k, v in decoded:
+                total+=v
+                if k in summary: summary[k]+=v
+                else:summary[k]=v
+            for k in summary:
+                summary[k]/=total
+            print(summary)
+            pred=max(summary, key=summary.get)
+            conf=summary[pred]
+            gt=float(data['answer'][idx])
+        
+            # metric calculation
+            accuracy.append(gt == pred)
+            confidence.append(conf)
 
     metrics = {
         'accuracy':np.mean(accuracy),
