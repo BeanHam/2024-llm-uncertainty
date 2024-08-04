@@ -218,10 +218,10 @@ def evaluate_model(model: AutoModelForCausalLM,
     
     Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. 
     
-    No explaination is needed. Do NOT repeat the content of the choice answer. """
+    No explaination is needed."""
                        
     # Iterate over the test set
-    for idx in tqdm(range(len(data))):
+    for idx in tqdm(range(14, len(data))):
 
         question=f"\n\n## QUESTION:\n{data['question_sentence'][idx]}"
         evidence=f"\n\n## EVIDENCE:\n{data['evidence'][idx]}"
@@ -240,7 +240,8 @@ def evaluate_model(model: AutoModelForCausalLM,
                                     num_return_sequences=num_return_sequences,
                                     pad_token_id=tokenizer.eos_token_id)
         output = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]    
-        print(output[0])
+        for i in output:
+            print(i)
         decoded = []
         for d in output:
             d = re.sub(r'[^\w\s]', ' ', d)
