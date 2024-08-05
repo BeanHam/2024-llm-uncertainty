@@ -71,14 +71,15 @@ def main():
         # inference
         #------------
         model.eval()
-        metrics  = evaluate_model(model=model,
-                                  tokenizer=tokenizer,
-                                  data=test_data,
-                                  max_new_tokens=32,
-                                  remove_suffix=args.suffix)
+        metrics, confidence  = evaluate_model(model=model,
+                                              tokenizer=tokenizer,
+                                              data=test_data,
+                                              max_new_tokens=32,
+                                              remove_suffix=args.suffix)
 
         for k, v in metrics.items(): print(f'   {k}: {v}')
         with open(args.save_path+f"baseline.json", 'w') as f: json.dump(metrics, f)
+        np.save(args.save_path+f"baseline.npy", confidence)
             
     # ----------------------
     # Finetuned
@@ -100,15 +101,16 @@ def main():
             # inference
             #------------
             model.eval()
-            metrics  = evaluate_model(model=model,
-                                      tokenizer=tokenizer,
-                                      data=test_data,
-                                      max_new_tokens=32,
-                                      remove_suffix=args.suffix)
+            metrics, confidence  = evaluate_model(model=model,
+                                                  tokenizer=tokenizer,
+                                                  data=test_data,
+                                                  max_new_tokens=32,
+                                                  remove_suffix=args.suffix)
 
             for k, v in metrics.items(): print(f'   {k}: {v}')
             with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
-
+            np.save(args.save_path+f"{checkpoint}.npy", confidence)
+            
             ## clear cache
             model.cpu()
             del model, checkpoint
