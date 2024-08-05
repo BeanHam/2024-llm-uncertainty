@@ -28,7 +28,7 @@ def main():
     parser.add_argument('--dataset', type=str, default='beanham/realtime_qa')
     parser.add_argument('--device', type=str, default='cuda', help='The device to mount the model on.')
     parser.add_argument('--hf_token_var', type=str, default='[your token]', help='hf login token')
-    parser.add_argument('--finetuned', type=str, default=False, help='hf login token')
+    parser.add_argument('--finetuned', type=str, default=no, help='hf login token')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
     parser.add_argument('--evidence', type=str, default='yes', help='hf login token')
     args = parser.parse_args()
