@@ -245,8 +245,8 @@ def evaluate_model(model: AutoModelForCausalLM,
         question=f"\n\n## QUESTION:\n{data['question_sentence'][idx]}"
         evidence=f"\n\n## EVIDENCE:\n{data['evidence'][idx]}"
         choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][idx][j] for j in range(len(data['choices'][idx]))]}"
-        if evidence == 'yes': user_input=system+question+evidence+choices"
-        else: user_input=system+question+choices"
+        if evidence == 'yes': user_input=system+question+evidence+choices
+        else: user_input=system+question+choices
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
         
