@@ -30,9 +30,10 @@ def main():
     parser.add_argument('--hf_token_var', type=str, default='[your token]', help='hf login token')
     parser.add_argument('--finetuned', type=str, default=False, help='hf login token')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
+    parser.add_argument('--evidence', type=str, default='yes', help='hf login token')
     args = parser.parse_args()
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
-    args.save_path=f'inference_results/'
+    args.save_path=f'inference_results_{args.evidence}/'
     if args.hf_token_var:
         hf_login(token=getenv(args.hf_token_var))
     if not path.exists(args.save_path):
@@ -49,7 +50,7 @@ def main():
     # ----------------------
     # Checkpoints
     # ----------------------
-    checkpoints = os.listdir('outputs_llama3/')
+    checkpoints = os.listdir(f'outputs_llama3_{args.evidence}/')
     if '.ipynb_checkpoints' in checkpoints:
         checkpoints.remove('.ipynb_checkpoints')
     if 'runs' in checkpoints:
@@ -75,7 +76,8 @@ def main():
                                               tokenizer=tokenizer,
                                               data=test_data,
                                               max_new_tokens=32,
-                                              remove_suffix=args.suffix)
+                                              remove_suffix=args.suffix,
+                                              evidence=args.evidence)
 
         for k, v in metrics.items(): print(f'   {k}: {v}')
         with open(args.save_path+f"baseline.json", 'w') as f: json.dump(metrics, f)
@@ -105,7 +107,8 @@ def main():
                                                   tokenizer=tokenizer,
                                                   data=test_data,
                                                   max_new_tokens=32,
-                                                  remove_suffix=args.suffix)
+                                                  remove_suffix=args.suffix,
+                                                  evidence=args.evidence)
 
             for k, v in metrics.items(): print(f'   {k}: {v}')
             with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
