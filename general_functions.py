@@ -305,4 +305,4 @@ def evaluate_model(model: AutoModelForCausalLM,
         'confidence':np.mean(confidence),
     }
     
-    return metrics
+    return metrics, confidence
