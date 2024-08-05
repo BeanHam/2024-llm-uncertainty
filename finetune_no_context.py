@@ -64,8 +64,8 @@ if __name__ == '__main__':
     args = parser.parse_args(args=[])
     
     # change saving directory
-    args.output_dir = 'outputs_'+args.use_model_prompt_defaults
-    args.save_dir = 'outputs_'+args.use_model_prompt_defaults+'/final_model/'
+    args.output_dir = 'outputs_'+args.use_model_prompt_defaults+'_no_context'
+    args.save_dir = 'outputs_'+args.use_model_prompt_defaults+'_no_context'+'/final_model/'
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
     # make first level directories
     if not path.exists(args.output_dir):
@@ -145,7 +145,7 @@ if __name__ == '__main__':
         """
         Wraps the format_data_as_instructions function with the specified arguments.
         """
-        return format_data_as_instructions(data, tokenizer)
+        return format_data_as_instructions_no_context(data, tokenizer)
         
     trainer = get_default_trainer(model, 
                                   tokenizer, 
