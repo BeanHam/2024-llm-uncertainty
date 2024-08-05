@@ -141,7 +141,7 @@ def get_lora_model(model: AutoModel,
     return get_peft_model(model, config)
 
 def format_data_as_instructions(data: Mapping, 
-                                evidence: string='yes', 
+                                evidence: string, 
                                 tokenizer: AutoTokenizer) -> list[str]:
     """
     Formats text data as instructions for the model. Can be used as a formatting function for the trainer class.
