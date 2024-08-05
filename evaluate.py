@@ -59,7 +59,7 @@ def main():
     # ----------------------
     # Baseline: no finetune
     # ----------------------
-    if args.finetuned=='False':
+    if args.finetuned=='no':
         #-----------------------
         # load model & tokenizer
         #-----------------------
