@@ -141,25 +141,36 @@ def get_lora_model(model: AutoModel,
     return get_peft_model(model, config)
 
 def format_data_as_instructions(data: Mapping, 
+                                evidence: string='yes', 
                                 tokenizer: AutoTokenizer) -> list[str]:
     """
     Formats text data as instructions for the model. Can be used as a formatting function for the trainer class.
     """
 
     output_texts = []
-    system="""## TASK: 
-    You are a helpful multiple choice question-answering assistant! 
 
-    I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
+    if evidence == 'yes':
+        system="""## TASK: 
+        You are a helpful multiple choice question-answering assistant! 
 
-    Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer."""     
+        I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
 
+        Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer.""" 
+    else:
+        system="""## TASK: 
+        You are a helpful multiple choice question-answering assistant! 
+
+        I will provide you with a QUESTION and multiple CHOICES. 
+        
+        Please answer the question by selecting one correct choice.""" 
+        
     # Iterate over the data and format the text
     for i in tqdm(range(len(data['question_sentence'])), desc='Formatting data'):
         question=f"\n\n## QUESTION:\n{data['question_sentence'][i]}"
         evidence=f"\n\n## EVIDENCE:\n{data['evidence'][i]}"
         choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
-        user_input=system+question+evidence+choices+"\n\n## ANSWER:"
+        if evidence == 'yes': user_input=system+question+evidence+choices+"\n\n## ANSWER:"
+        else: user_input=system+question+choices+"\n\n## ANSWER:"
         chat = [
           {"role": "user", "content": user_input},
           {"role": "assistant", "content": data['answer'][i]},
