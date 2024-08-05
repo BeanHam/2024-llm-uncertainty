@@ -160,9 +160,7 @@ def format_data_as_instructions(data: Mapping,
         system="""## TASK: 
         You are a helpful multiple choice question-answering assistant! 
 
-        I will provide you with a QUESTION and multiple CHOICES. 
-        
-        Please answer the question by selecting one correct choice.""" 
+        I will provide you with a QUESTION and multiple CHOICES. Please answer the question by selecting one correct choice.""" 
         
     # Iterate over the data and format the text
     for i in tqdm(range(len(data['question_sentence'])), desc='Formatting data'):
@@ -212,31 +210,43 @@ def evaluate_model(model: AutoModelForCausalLM,
                    min_new_tokens: int=1,
                    max_new_tokens: int=32,
                    num_return_sequences: int=10,
-                   remove_suffix: str=None) -> dict:
+                   remove_suffix: str=None,
+                   evidence: str='yes') -> dict:
     """
     Evaluate a Hugging Face model on a dataset using three text summarization metrics.
     """
     
     accuracy = []
     confidence = []
-    system="""## TASK: 
-    You are a helpful multiple choice question-answering assistant! 
+    if evidence == 'yes':
+        system="""## TASK: 
+        You are a helpful multiple choice question-answering assistant! 
 
-    I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
+        I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
 
-    Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer.
+        Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer.
     
-    Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. 
+        Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. 
     
-    No explaination is needed."""
-                       
+        No explaination is needed."""
+    else:
+        system="""## TASK: 
+        You are a helpful multiple choice question-answering assistant! 
+
+        I will provide you with a QUESTION and multiple CHOICES. Please answer the question by selecting one correct choice.
+        
+        Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. 
+    
+        No explaination is needed."""
+                        
     # Iterate over the test set
     for idx in tqdm(range(len(data))):
 
         question=f"\n\n## QUESTION:\n{data['question_sentence'][idx]}"
         evidence=f"\n\n## EVIDENCE:\n{data['evidence'][idx]}"
         choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][idx][j] for j in range(len(data['choices'][idx]))]}"
-        user_input=system+question+evidence+choices
+        if evidence == 'yes': user_input=system+question+evidence+choices"
+        else: user_input=system+question+choices"
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
         
