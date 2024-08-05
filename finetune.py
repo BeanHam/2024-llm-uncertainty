@@ -26,7 +26,8 @@ if __name__ == '__main__':
     
     # Model ID
     parser.add_argument('--model_id', type=str, default='meta-llama/Meta-Llama-3-8B-Instruct', help='The model ID to fine-tune.')
-    parser.add_argument('--device', type=str, default='auto', help='The device to mount the model on.')    
+    parser.add_argument('--device', type=str, default='auto', help='The device to mount the model on.')
+    
     # Model arguments
     parser.add_argument('--use_mps_device', type=str, default='False', help='Whether to use an MPS device.')
     parser.add_argument('--gradient_checkpointing', type=str, default='True', help='Whether to use gradient checkpointing.')
@@ -59,13 +60,14 @@ if __name__ == '__main__':
     parser.add_argument('--logging_strategy', type=str, default='steps', help='The number of steps between logging.')
     parser.add_argument('--logging_steps', type=int, default=0.1, help='The number of steps between logging.')
     parser.add_argument('--epoch', type=int, default=1, help='The length split of the dataset.')
-
+    parser.add_argument('--context', type=str, default='yes', help='The length split of the dataset.')
+    
     # Parse arguments
-    args = parser.parse_args(args=[])
+    args = parser.parse_args()
     
     # change saving directory
-    args.output_dir = 'outputs_'+args.use_model_prompt_defaults
-    args.save_dir = 'outputs_'+args.use_model_prompt_defaults+'/final_model/'
+    args.output_dir = 'outputs_'+args.use_model_prompt_defaults+'_'+args.context
+    args.save_dir = 'outputs_'+args.use_model_prompt_defaults+'_'+args.context+'/final_model/'
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
     # make first level directories
     if not path.exists(args.output_dir):
@@ -145,7 +147,7 @@ if __name__ == '__main__':
         """
         Wraps the format_data_as_instructions function with the specified arguments.
         """
-        return format_data_as_instructions(data, tokenizer)
+        return format_data_as_instructions(data, args.context, tokenizer)
         
     trainer = get_default_trainer(model, 
                                   tokenizer, 
