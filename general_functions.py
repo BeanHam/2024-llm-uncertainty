@@ -168,34 +168,6 @@ def format_data_as_instructions(data: Mapping,
         output_texts.append(text)
 
     return output_texts
-
-def format_data_as_instructions_no_context(data: Mapping, 
-                                           tokenizer: AutoTokenizer) -> list[str]:
-    """
-    Formats text data as instructions for the model. Can be used as a formatting function for the trainer class.
-    """
-
-    output_texts = []
-    system="""## TASK: 
-    You are a helpful multiple choice question-answering assistant! 
-
-    I will provide you with a QUESTION and multiple CHOICES. 
-
-    Please answer the multiple-choice question. Only one choice is the correct answer."""     
-
-    # Iterate over the data and format the text
-    for i in tqdm(range(len(data['question_sentence'])), desc='Formatting data'):
-        question=f"\n\n## QUESTION:\n{data['question_sentence'][i]}" 
-        choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
-        user_input=system+question+choices+"\n\n## ANSWER:"
-        chat = [
-          {"role": "user", "content": user_input},
-          {"role": "assistant", "content": data['answer'][i]},
-        ]
-        text = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=False)
-        output_texts.append(text)
-
-    return output_texts
     
 def get_default_trainer(model: AutoModel,
                 tokenizer: AutoTokenizer,
