@@ -263,7 +263,7 @@ def evaluate_model(model: AutoModelForCausalLM,
                 else:summary[k]=v
             for k in summary:
                 summary[k]/=total
-            print(summary)
+            #print(summary)
             pred=max(summary, key=summary.get)
             conf=summary[pred]
             gt=float(data['answer'][idx])
