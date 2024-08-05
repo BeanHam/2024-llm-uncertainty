@@ -97,7 +97,7 @@ def main():
                                                        gradient_checkpointing=False,
                                                        quantization_type='4bit',
                                                        device='auto')
-            model = PeftModel.from_pretrained(model, f'outputs_llama3_{arg.evidence}/{checkpoint}/')
+            model = PeftModel.from_pretrained(model, f'outputs_llama3_{args.evidence}/{checkpoint}/')
 
             #------------
             # inference
