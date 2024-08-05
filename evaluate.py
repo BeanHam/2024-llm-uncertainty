@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--dataset', type=str, default='beanham/realtime_qa')
     parser.add_argument('--device', type=str, default='cuda', help='The device to mount the model on.')
     parser.add_argument('--hf_token_var', type=str, default='[your token]', help='hf login token')
+    parser.add_argument('--finetuned', type=str, default=False, help='hf login token')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
     args = parser.parse_args()
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
@@ -53,13 +54,11 @@ def main():
         checkpoints.remove('.ipynb_checkpoints')
     if 'runs' in checkpoints:
         checkpoints.remove('runs')
-    
-    for checkpoint in checkpoints:
-        
-        #if checkpoint in ['final_model', 'checkpoint-18']:
-        #    continue
-        print(checkpoint)
-        
+
+    # ----------------------
+    # Baseline: no finetune
+    # ----------------------
+    if args.finetuned=='False':
         #-----------------------
         # load model & tokenizer
         #-----------------------
@@ -68,8 +67,6 @@ def main():
                                                    gradient_checkpointing=False,
                                                    quantization_type='4bit',
                                                    device='auto')
-        model = PeftModel.from_pretrained(model, f'outputs_llama3/{checkpoint}/')
-
         #------------
         # inference
         #------------
@@ -81,13 +78,42 @@ def main():
                                   remove_suffix=args.suffix)
 
         for k, v in metrics.items(): print(f'   {k}: {v}')
-        with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
+        with open(args.save_path+f"baseline.json", 'w') as f: json.dump(metrics, f)
+            
+    # ----------------------
+    # Finetuned
+    # ----------------------            
+    else:
+        for checkpoint in checkpoints:
+        
+            #-----------------------
+            # load model & tokenizer
+            #-----------------------
+            print('Getting model and tokenizer...')
+            model, tokenizer = get_model_and_tokenizer(args.model_id,
+                                                       gradient_checkpointing=False,
+                                                       quantization_type='4bit',
+                                                       device='auto')
+            model = PeftModel.from_pretrained(model, f'outputs_llama3/{checkpoint}/')
 
-        ## clear cache
-        model.cpu()
-        del model, checkpoint
-        gc.collect()
-        torch.cuda.empty_cache()
+            #------------
+            # inference
+            #------------
+            model.eval()
+            metrics  = evaluate_model(model=model,
+                                      tokenizer=tokenizer,
+                                      data=test_data,
+                                      max_new_tokens=32,
+                                      remove_suffix=args.suffix)
+
+            for k, v in metrics.items(): print(f'   {k}: {v}')
+            with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
+
+            ## clear cache
+            model.cpu()
+            del model, checkpoint
+            gc.collect()
+            torch.cuda.empty_cache()
 
 if __name__ == "__main__":
     main()
