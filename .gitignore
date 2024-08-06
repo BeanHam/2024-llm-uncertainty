@@ -1,4 +1,5 @@
-outputs_llama3/
+outputs_llama3_yes/
+outputs_llama3_no/
 __pycache__/
 .DS_Store
 .ipynb_checkpoints/
