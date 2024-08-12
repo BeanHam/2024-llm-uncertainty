@@ -36,12 +36,10 @@ if __name__ == '__main__':
     parser.add_argument('--tune_modules', type=str, default='linear4bit', help='The modules to tune using LoRA.')
     parser.add_argument('--exclude_names', type=str, default='lm_head', help='The names of the modules to exclude from tuning.')
     parser.add_argument('--resume_from_checkpoint', type=str, default='False', help='Whether to resume from a checkpoint.')
-
     # Dataset arguments
-    parser.add_argument('--dataset', type=str, default='beanham/realtime_qa', help='The dataset to use for fine-tuning.')    
-    parser.add_argument('--max_seq_length', type=int, default=1024, help='The maximum sequence length to use for fine-tuning.')
+    parser.add_argument('--dataset', type=str, default='cais/mmlu', help='The dataset to use for fine-tuning.')    
+    parser.add_argument('--max_seq_length', type=int, default=512, help='The maximum sequence length to use for fine-tuning.')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
-
     # Training arguments
     parser.add_argument('--batch_size', type=int, default=1, help='The batch size to use for fine-tuning.')
     parser.add_argument('--gradient_accumulation_steps', type=int, default=4, help='The number of gradient accumulation steps to use for fine-tuning.')
@@ -51,7 +49,6 @@ if __name__ == '__main__':
     parser.add_argument('--fp16', type=str, default='True', help='Whether to use fp16.')
     parser.add_argument('--output_dir', type=str, default='outputs', help='The directory to save the fine-tuned model.')
     parser.add_argument('--optim', type=str, default='paged_adamw_8bit', help='The optimizer to use for fine-tuning.')
-
     # Logging arguments
     parser.add_argument('--evaluation_strategy', type=str, default='steps', help='The evaluation strategy to use for fine-tuning.')
     parser.add_argument('--eval_steps', type=int, default=0.1, help='The number of steps between evaluations.')
@@ -59,17 +56,15 @@ if __name__ == '__main__':
     parser.add_argument('--save_steps', type=int, default=0.1, help='The number of steps between saving the model to the hub.')
     parser.add_argument('--logging_strategy', type=str, default='steps', help='The number of steps between logging.')
     parser.add_argument('--logging_steps', type=int, default=0.1, help='The number of steps between logging.')
-    parser.add_argument('--epoch', type=int, default=1, help='The length split of the dataset.')
-    parser.add_argument('--evidence', type=str, default='yes', help='The length split of the dataset.')
+    parser.add_argument('--epoch', type=int, default=2, help='The length split of the dataset.')
     
     # Parse arguments
     args = parser.parse_args()
     
     # change saving directory
-    args.output_dir = 'outputs_'+args.use_model_prompt_defaults+'_'+args.evidence
-    args.save_dir = 'outputs_'+args.use_model_prompt_defaults+'_'+args.evidence+'/final_model/'
+    args.output_dir = 'outputs_'+args.use_model_prompt_defaults
+    args.save_dir = 'outputs_'+args.use_model_prompt_defaults+'/final_model/'
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
-    # make first level directories
     if not path.exists(args.output_dir):
         makedirs(args.output_dir)
     if not path.exists(args.save_dir):
@@ -82,9 +77,9 @@ if __name__ == '__main__':
     # Load Data
     # ----------------------
     print('Downloading and preparing data...')
-    data = get_dataset_slices(args.dataset)
-    train_data = data['train']
-    val_data = data['val']
+    data = load_dataset(args.dataset, "all")
+    train_data = data['auxiliary_train']
+    val_data = data['validation']
     test_data = data['test']
     train_data.set_format(type='torch', device='cuda')
     val_data.set_format(type='torch', device='cuda')
@@ -147,7 +142,7 @@ if __name__ == '__main__':
         """
         Wraps the format_data_as_instructions function with the specified arguments.
         """
-        return format_data_as_instructions(data, args.evidence, tokenizer)
+        return format_data_as_instructions(data, tokenizer)
         
     trainer = get_default_trainer(model, 
                                   tokenizer, 

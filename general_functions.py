@@ -141,37 +141,21 @@ def get_lora_model(model: AutoModel,
     return get_peft_model(model, config)
 
 def format_data_as_instructions(data: Mapping, 
-                                evidence: str, 
                                 tokenizer: AutoTokenizer) -> list[str]:
     """
     Formats text data as instructions for the model. Can be used as a formatting function for the trainer class.
     """
 
-    output_texts = []
-
-    if evidence == 'yes':
-        system="""## TASK: 
-        You are a helpful multiple choice question-answering assistant! 
-
-        I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
-
-        Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer.""" 
-    else:
-        system="""## TASK: 
-        You are a helpful multiple choice question-answering assistant! 
-
-        I will provide you with a QUESTION and multiple CHOICES. Please answer the question by selecting one correct choice.""" 
-        
+    output_texts = []        
     # Iterate over the data and format the text
     for i in tqdm(range(len(data['question_sentence'])), desc='Formatting data'):
-        question=f"\n\n## QUESTION:\n{data['question_sentence'][i]}"
-        evidence=f"\n\n## EVIDENCE:\n{data['evidence'][i]}"
+        question=f"\n\n## QUESTION: {data['question'][i]}"
         choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
-        if evidence == 'yes': user_input=system+question+evidence+choices+"\n\n## ANSWER:"
-        else: user_input=system+question+choices+"\n\n## ANSWER:"
+        user_input=question+choices+"\n\n## ANSWER:"
+        user_answer = f"{data['answer'][i]}"
         chat = [
-          {"role": "user", "content": user_input},
-          {"role": "assistant", "content": data['answer'][i]},
+            {"role": "user", "content": user_input},
+            {"role": "assistant", "content": user_answer},
         ]
         text = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=False)
         output_texts.append(text)
@@ -210,46 +194,23 @@ def evaluate_model(model: AutoModelForCausalLM,
                    min_new_tokens: int=1,
                    max_new_tokens: int=32,
                    num_return_sequences: int=10,
-                   remove_suffix: str=None,
-                   evidence: str='yes') -> dict:
+                   remove_suffix: str=None) -> dict:
     """
     Evaluate a Hugging Face model on a dataset using three text summarization metrics.
     """
     
     accuracy = []
-    confidence = []
-    if evidence == 'yes':
-        system="""## TASK: 
-        You are a helpful multiple choice question-answering assistant! 
-
-        I will provide you with a QUESTION, an EVIDENCE associated with the question, and multiple CHOICES. 
-
-        Please use the provided evidence to answer the multiple-choice question. Only one choice is the correct answer.
-    
-        Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. 
-    
-        No explaination is needed."""
-    else:
-        system="""## TASK: 
-        You are a helpful multiple choice question-answering assistant! 
-
-        I will provide you with a QUESTION and multiple CHOICES. Please answer the question by selecting one correct choice.
-        
-        Please use the following output format example: ## ANSWER: {1}. ## CONFIDENCE: {80%}. 
-    
-        No explaination is needed."""
-                        
+    confidence = []                        
     # Iterate over the test set
-    for idx in tqdm(range(len(data))):
+    for i in tqdm(range(len(data))):
 
-        question=f"\n\n## QUESTION:\n{data['question_sentence'][idx]}"
-        evidence=f"\n\n## EVIDENCE:\n{data['evidence'][idx]}"
-        choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][idx][j] for j in range(len(data['choices'][idx]))]}"
-        if evidence == 'yes': user_input=system+question+evidence+choices
-        else: user_input=system+question+choices
+        question=f"\n\n## QUESTION: {data['question'][i]}"
+        choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
+        user_input=question+choices+"\n\n## ANSWER:"
+        user_answer = f"{data['answer'][i]}"
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
-        
+
         # Calculate the position of the start of the output string
         start_decode = len(tokenizer.encode(input_data, truncation=True, max_length=max_tokens))
         input_ids = tokenizer(input_data, return_tensors='pt', truncation=True, max_length=max_tokens).to(model.device)
