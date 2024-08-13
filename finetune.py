@@ -51,11 +51,11 @@ if __name__ == '__main__':
     parser.add_argument('--optim', type=str, default='paged_adamw_8bit', help='The optimizer to use for fine-tuning.')
     # Logging arguments
     parser.add_argument('--evaluation_strategy', type=str, default='steps', help='The evaluation strategy to use for fine-tuning.')
-    parser.add_argument('--eval_steps', type=int, default=0.1, help='The number of steps between evaluations.')
+    parser.add_argument('--eval_steps', type=int, default=0.05, help='The number of steps between evaluations.')
     parser.add_argument('--save_strategy', type=str, default='steps', help='The number of steps between logging.')
-    parser.add_argument('--save_steps', type=int, default=0.1, help='The number of steps between saving the model to the hub.')
+    parser.add_argument('--save_steps', type=int, default=0.05, help='The number of steps between saving the model to the hub.')
     parser.add_argument('--logging_strategy', type=str, default='steps', help='The number of steps between logging.')
-    parser.add_argument('--logging_steps', type=int, default=0.1, help='The number of steps between logging.')
+    parser.add_argument('--logging_steps', type=int, default=0.05, help='The number of steps between logging.')
     parser.add_argument('--epoch', type=int, default=1, help='The length split of the dataset.')
     
     # Parse arguments
@@ -81,9 +81,6 @@ if __name__ == '__main__':
     train_data = data['auxiliary_train']
     val_data = data['validation']
     test_data = data['test']
-    train_data.set_format(type='torch', device='cuda')
-    val_data.set_format(type='torch', device='cuda')
-    test_data.set_format(type='torch', device='cuda')
     
     # ----------------------
     # Load Model & Tokenizer
