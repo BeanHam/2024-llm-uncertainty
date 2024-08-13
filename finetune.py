@@ -78,7 +78,7 @@ if __name__ == '__main__':
     # ----------------------
     print('Downloading and preparing data...')
     data = load_dataset(args.dataset, "all")
-    train_data = data['auxiliary_train']
+    train_data = data['auxiliary_train'].select(range(25000))
     val_data = data['validation']
     test_data = data['test']
     
