@@ -65,7 +65,7 @@ def main():
     # ----------------------            
     for checkpoint in checkpoints:
         
-        print('Getting model and tokenizer...')
+        print(f"{checkpoint}...")
         model, tokenizer = get_model_and_tokenizer(args.model_id,
                                                    gradient_checkpointing=False,
                                                    quantization_type='4bit',
