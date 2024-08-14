@@ -30,10 +30,9 @@ def main():
     parser.add_argument('--hf_token_var', type=str, default='[your token]', help='hf login token')
     parser.add_argument('--finetuned', type=str, default='no', help='hf login token')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
-    parser.add_argument('--evidence', type=str, default='yes', help='hf login token')
     args = parser.parse_args()
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
-    args.save_path=f'inference_results_{args.evidence}/'
+    args.save_path=f'inference_results/'
     if args.hf_token_var:
         hf_login(token=getenv(args.hf_token_var))
     if not path.exists(args.save_path):
@@ -43,14 +42,13 @@ def main():
     # Load Data
     # ----------------------
     print('Downloading and preparing data...')
-    data = get_dataset_slices(args.dataset)
-    test_data = data['test'].select(range(100))
-    test_data.set_format(type='torch', device='cuda')
+    data = load_dataset(args.dataset, "all")
+    test_data = data['test']
     
     # ----------------------
     # Checkpoints
     # ----------------------
-    checkpoints = os.listdir(f'outputs_llama3_{args.evidence}/')
+    checkpoints = os.listdir(f'outputs_llama3/')
     if '.ipynb_checkpoints' in checkpoints:
         checkpoints.remove('.ipynb_checkpoints')
     if 'runs' in checkpoints:
@@ -75,9 +73,8 @@ def main():
         metrics, confidence  = evaluate_model(model=model,
                                               tokenizer=tokenizer,
                                               data=test_data,
-                                              max_new_tokens=32,
-                                              remove_suffix=args.suffix,
-                                              evidence=args.evidence)
+                                              max_new_tokens=8,
+                                              remove_suffix=args.suffix)
 
         for k, v in metrics.items(): print(f'   {k}: {v}')
         with open(args.save_path+f"baseline.json", 'w') as f: json.dump(metrics, f)
@@ -106,9 +103,8 @@ def main():
             metrics, confidence  = evaluate_model(model=model,
                                                   tokenizer=tokenizer,
                                                   data=test_data,
-                                                  max_new_tokens=32,
-                                                  remove_suffix=args.suffix,
-                                                  evidence=args.evidence)
+                                                  max_new_tokens=8,
+                                                  remove_suffix=args.suffix)
 
             for k, v in metrics.items(): print(f'   {k}: {v}')
             with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
