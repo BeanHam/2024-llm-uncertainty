@@ -190,7 +190,7 @@ def get_default_trainer(model: AutoModel,
 def evaluate_model(model: AutoModelForCausalLM, 
                    tokenizer: AutoTokenizer, 
                    data: Iterable,
-                   max_tokens: int=1024,
+                   max_tokens: int=512,
                    min_new_tokens: int=1,
                    max_new_tokens: int=32,
                    num_return_sequences: int=10,
@@ -205,12 +205,12 @@ def evaluate_model(model: AutoModelForCausalLM,
     for i in tqdm(range(len(data))):
 
         question=f"\n\n## QUESTION: {data['question'][i]}"
-        choices=f"\n\n## CHOICES:\n{[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
-        user_input=question+choices+"\n\n## ANSWER:"
+        choices=f"\n\n## CHOICES: {[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
+        user_input=question+choices+"\n\n## ANSWER: "
         user_answer = f"{data['answer'][i]}"
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
-
+        
         # Calculate the position of the start of the output string
         start_decode = len(tokenizer.encode(input_data, truncation=True, max_length=max_tokens))
         input_ids = tokenizer(input_data, return_tensors='pt', truncation=True, max_length=max_tokens).to(model.device)
@@ -220,8 +220,9 @@ def evaluate_model(model: AutoModelForCausalLM,
                                     min_new_tokens=min_new_tokens, 
                                     num_return_sequences=num_return_sequences,
                                     pad_token_id=tokenizer.eos_token_id)
-        output = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]
+        # postprocessing
         decoded = []
+        output = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]        
         for d in output:
             try:
                 d = re.sub(r'[^\w\s]', ' ', d)
