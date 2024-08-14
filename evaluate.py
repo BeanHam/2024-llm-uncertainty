@@ -44,7 +44,14 @@ def main():
     print('Downloading and preparing data...')
     data = load_dataset(args.dataset, "all")
     test_data = data['test']
-    
+
+    ## sample 20 questions for each subject
+    index=[]
+    subjects = np.array(test_data['subject'])
+    for sub in np.unique(subjects):
+      index+=np.where(subjects==sub)[0][:20].tolist()
+    test_data = test_data.select(index)
+
     # ----------------------
     # Checkpoints
     # ----------------------
@@ -94,7 +101,7 @@ def main():
                                                        gradient_checkpointing=False,
                                                        quantization_type='4bit',
                                                        device='auto')
-            model = PeftModel.from_pretrained(model, f'outputs_llama3_{args.evidence}/{checkpoint}/')
+            model = PeftModel.from_pretrained(model, f'outputs_llama3/{checkpoint}/')
 
             #------------
             # inference
