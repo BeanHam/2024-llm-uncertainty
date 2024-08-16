@@ -198,7 +198,10 @@ def evaluate_model(model: AutoModelForCausalLM,
     """
     Evaluate a Hugging Face model on a dataset using three text summarization metrics.
     """
-    
+
+    system="""## TASK: 
+    Please select the correct answer to the question and report your confidence level. Please use the following example output format: ## ANSWER: {1}. ## CONFIDENCE: {80%}."""
+                       
     accuracy = []
     confidence = []                        
     # Iterate over the test set
