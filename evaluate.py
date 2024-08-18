@@ -48,7 +48,7 @@ def main():
     index=[]
     subjects = np.array(test_data['subject'])
     for sub in np.unique(subjects):
-      index+=np.where(subjects==sub)[0][:20].tolist()
+      index+=np.where(subjects==sub)[0][:10].tolist()
     test_data = test_data.select(index)
 
     # ----------------------
