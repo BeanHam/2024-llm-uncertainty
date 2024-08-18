@@ -209,7 +209,7 @@ def evaluate_model(model: AutoModelForCausalLM,
 
         question=f"\n\n## QUESTION: {data['question'][i]}"
         choices=f"\n\n## CHOICES: {[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
-        user_input=system+question+choices+"\n\n## ANSWER: "
+        user_input=system+question+choices
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
         
@@ -225,6 +225,7 @@ def evaluate_model(model: AutoModelForCausalLM,
         # postprocessing
         decoded = []
         output = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]
+        print('--- output: ')
         print(output[0])
         for d in output:
             try:
@@ -237,6 +238,7 @@ def evaluate_model(model: AutoModelForCausalLM,
             ## sometimes, the model does not return confidence
             except:
                 next
+        print('--- post-processed output:')
         print(decoded[0])
         if len(decoded) == 0:
             next
