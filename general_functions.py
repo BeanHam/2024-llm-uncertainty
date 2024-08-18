@@ -210,7 +210,6 @@ def evaluate_model(model: AutoModelForCausalLM,
         question=f"\n\n## QUESTION: {data['question'][i]}"
         choices=f"\n\n## CHOICES: {[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
         user_input=system+question+choices+"\n\n## ANSWER: "
-        user_answer = f"{data['answer'][i]}"
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
         
@@ -253,8 +252,8 @@ def evaluate_model(model: AutoModelForCausalLM,
             #print(summary)
             pred=max(summary, key=summary.get)
             conf=summary[pred]
-            gt=float(data['answer'][idx])
-        
+            gt=float(data['answer'][i])
+            
             # metric calculation
             accuracy.append(gt == pred)
             confidence.append(conf)
