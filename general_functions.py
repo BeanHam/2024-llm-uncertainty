@@ -225,8 +225,6 @@ def evaluate_model(model: AutoModelForCausalLM,
         # postprocessing
         decoded = []
         output = [tokenizer.decode(i[start_decode:]).replace(remove_suffix, '').replace('</a>', '') for i in output]
-        print('--- output: ')
-        print(output[0])
         for d in output:
             try:
                 d = re.sub(r'[^\w\s]', ' ', d)
@@ -238,8 +236,6 @@ def evaluate_model(model: AutoModelForCausalLM,
             ## sometimes, the model does not return confidence
             except:
                 next
-        print('--- post-processed output:')
-        print(decoded[0])
         if len(decoded) == 0:
             next
         else:
