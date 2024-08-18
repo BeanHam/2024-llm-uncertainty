@@ -79,7 +79,7 @@ def main():
         metrics, confidence  = evaluate_model(model=model,
                                               tokenizer=tokenizer,
                                               data=test_data,
-                                              max_new_tokens=8,
+                                              max_new_tokens=32,
                                               remove_suffix=args.suffix)
 
         for k, v in metrics.items(): print(f'   {k}: {v}')
