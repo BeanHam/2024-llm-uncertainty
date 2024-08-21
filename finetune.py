@@ -37,7 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('--exclude_names', type=str, default='lm_head', help='The names of the modules to exclude from tuning.')
     parser.add_argument('--resume_from_checkpoint', type=str, default='False', help='Whether to resume from a checkpoint.')
     # Dataset arguments
-    parser.add_argument('--dataset', type=str, default='cais/mmlu', help='The dataset to use for fine-tuning.')    
+    parser.add_argument('--dataset', type=str, default='allenai/ai2_arc', help='The dataset to use for fine-tuning.')    
     parser.add_argument('--max_seq_length', type=int, default=512, help='The maximum sequence length to use for fine-tuning.')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
     # Training arguments
@@ -77,10 +77,20 @@ if __name__ == '__main__':
     # Load Data
     # ----------------------
     print('Downloading and preparing data...')
-    data = load_dataset(args.dataset, "all")
-    train_data = data['auxiliary_train'].select(range(20000))
-    val_data = data['validation']
-    test_data = data['test']
+    def clean_data(sample):
+        choices = sample['choices']['text']
+        for i in range(len(choices)):
+            choices[i]= string.ascii_uppercase[i]+': '+choices[i]
+        sample['choices']['text'] = choices
+
+        if sample['answerKey'] not in string.ascii_uppercase:
+            sample['answerKey'] = string.ascii_uppercase[int(sample['answerKey'])-1]
+        return sample
+        
+    data = load_dataset(args.dataset, "ARC-Easy")
+    train_data = data['train'].map(clean_data)
+    val_data = data['validation'].map(clean_data)
+    test_data = data['test'].map(clean_data)
     
     # ----------------------
     # Load Model & Tokenizer
