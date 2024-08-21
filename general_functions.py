@@ -150,9 +150,9 @@ def format_data_as_instructions(data: Mapping,
     # Iterate over the data and format the text
     for i in tqdm(range(len(data['question'])), desc='Formatting data'):
         question=f"\n\n## QUESTION: {data['question'][i]}"
-        choices=f"\n\n## CHOICES: {[str(j)+': '+data['choices'][i][j] for j in range(len(data['choices'][i]))]}"
+        choices=f"\n\n## CHOICES: {data['choices'][i]['text']}"
         user_input=question+choices+"\n\n## ANSWER: "
-        user_answer = f"{data['answer'][i]}"
+        user_answer = f"{data['answerKey'][i]}"
         chat = [
             {"role": "user", "content": user_input},
             {"role": "assistant", "content": user_answer},
