@@ -80,15 +80,18 @@ def main():
         # inference
         #------------
         model.eval()
-        metrics  = evaluate_accuracy(model=model,
+        outputs  = evaluate_accuracy(model=model,
                                      tokenizer=tokenizer,
                                      data=test_data,
                                      max_new_tokens=5,
                                      remove_suffix=args.suffix)
+        np.save(args.save_path+f"{checkpoint}_outputs.npy", outputs)
 
-        for k, v in metrics.items(): print(f'   {k}: {v}')
-        with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
-        #np.save(args.save_path+f"{checkpoint}.npy", confidence)
+        #-------------------
+        # metric calculation
+        #-------------------
+        #for k, v in metrics.items(): print(f'   {k}: {v}')
+        #with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)        
             
         ## clear cache
         model.cpu()
