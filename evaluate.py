@@ -83,7 +83,7 @@ def main():
         outputs  = evaluate_accuracy(model=model,
                                      tokenizer=tokenizer,
                                      data=test_data,
-                                     max_new_tokens=5,
+                                     max_new_tokens=10,
                                      remove_suffix=args.suffix)
         np.save(args.save_path+f"{checkpoint}_outputs.npy", outputs)
 
