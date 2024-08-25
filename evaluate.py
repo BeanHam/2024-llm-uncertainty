@@ -2,6 +2,7 @@ import os
 import gc
 import json
 import torch
+import string
 import argparse
 import numpy as np
 import pandas as pd
@@ -25,7 +26,7 @@ def main():
     #-------------------    
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_id', type=str, default='meta-llama/Meta-Llama-3-8B-Instruct')
-    parser.add_argument('--dataset', type=str, default='cais/mmlu')
+    parser.add_argument('--dataset', type=str, default='allenai/ai2_arc')
     parser.add_argument('--device', type=str, default='cuda', help='The device to mount the model on.')
     parser.add_argument('--hf_token_var', type=str, default='[your token]', help='hf login token')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
@@ -41,16 +42,19 @@ def main():
     # Load Data
     # ----------------------
     print('Downloading and preparing data...')
-    data = load_dataset(args.dataset, "all")
-    test_data = data['test']
+    def clean_data(sample):
+        choices = sample['choices']['text']
+        for i in range(len(choices)):
+            choices[i]= string.ascii_uppercase[i]+': '+choices[i]
+        sample['choices']['text'] = choices
 
-    ## sample 20 questions for each subject
-    index=[]
-    subjects = np.array(test_data['subject'])
-    for sub in np.unique(subjects):
-      index+=np.where(subjects==sub)[0][:10].tolist()
-    test_data = test_data.select(index)
-
+        if sample['answerKey'] not in string.ascii_uppercase:
+            sample['answerKey'] = string.ascii_uppercase[int(sample['answerKey'])-1]
+        return sample
+        
+    data = load_dataset(args.dataset, "ARC-Easy")
+    test_data = data['test'].map(clean_data)
+    
     # ----------------------
     # Checkpoints
     # ----------------------
@@ -76,15 +80,18 @@ def main():
         # inference
         #------------
         model.eval()
-        metrics, confidence  = evaluate_model(model=model,
-                                              tokenizer=tokenizer,
-                                              data=test_data,
-                                              max_new_tokens=16,
-                                              remove_suffix=args.suffix)
+        outputs  = evaluate_accuracy(model=model,
+                                     tokenizer=tokenizer,
+                                     data=test_data,
+                                     max_new_tokens=10,
+                                     remove_suffix=args.suffix)
+        np.save(args.save_path+f"{checkpoint}_outputs.npy", outputs)
 
-        for k, v in metrics.items(): print(f'   {k}: {v}')
-        with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)
-        np.save(args.save_path+f"{checkpoint}.npy", confidence)
+        #-------------------
+        # metric calculation
+        #-------------------
+        #for k, v in metrics.items(): print(f'   {k}: {v}')
+        #with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)        
             
         ## clear cache
         model.cpu()

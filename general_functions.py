@@ -3,6 +3,7 @@ import re
 import json
 import torch
 import wandb
+import string
 import evaluate
 import argparse
 import numpy as np
@@ -262,3 +263,39 @@ def evaluate_model(model: AutoModelForCausalLM,
     }
     
     return metrics, confidence
+
+def evaluate_accuracy(model: AutoModelForCausalLM, 
+                      tokenizer: AutoTokenizer, 
+                      data: Iterable,
+                      max_tokens: int=512,
+                      min_new_tokens: int=1,
+                      max_new_tokens: int=32,
+                      remove_suffix: str=None) -> dict:
+    """
+    Evaluate a Hugging Face model on a dataset using three text summarization metrics.
+    """
+                          
+    outputs = []
+    # Iterate over the test set
+    for i in tqdm(range(len(data))):
+
+        question=f"\n\n## QUESTION: {data['question'][i]}"
+        choices=f"\n\n## CHOICES: {data['choices'][i]['text']}"
+        user_input=question+choices+"\n\n## ANSWER: "
+        chat = [{"role": "user", "content": user_input}]
+        input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
+                    
+        # Calculate the position of the start of the output string
+        start_decode = len(tokenizer.encode(input_data, truncation=True, max_length=max_tokens))
+        input_ids = tokenizer(input_data, return_tensors='pt', truncation=True, max_length=max_tokens).to(model.device)
+        with torch.no_grad():
+            output = model.generate(**input_ids, 
+                                    max_new_tokens=max_new_tokens, 
+                                    min_new_tokens=min_new_tokens, 
+                                    pad_token_id=tokenizer.eos_token_id)
+
+        # postprocessing
+        decoded = tokenizer.decode(output[start_decode:]).replace(remove_suffix, '').replace('</a>', '')
+        outputs.append(decoded)
+    
+    return outputs
