@@ -295,8 +295,8 @@ def evaluate_accuracy(model: AutoModelForCausalLM,
                                     pad_token_id=tokenizer.eos_token_id)
 
         # postprocessing
-        decoded = tokenizer.decode(output[start_decode:])#.replace(remove_suffix, '').replace('</a>', '')
-        print(decoded)
-        outputs.append(decoded)
+        #decoded = tokenizer.decode(output[start_decode:])#.replace(remove_suffix, '').replace('</a>', '')
+        print(output)
+        outputs.append(output)
     
     return outputs
