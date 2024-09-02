@@ -54,7 +54,7 @@ def get_dataset_slices(dataset: str) -> dict:
     """
 
     # Download the dataset splits, including the dataset version if specified
-    train_data = load_dataset(dataset, split='train').select(range(5000))
+    train_data = load_dataset(dataset, split='train')
     val_data = load_dataset(dataset, split='validation')
     test_data = load_dataset(dataset, split='test')
     
@@ -146,14 +146,14 @@ def format_data_as_instructions(data: Mapping,
     """
     Formats text data as instructions for the model. Can be used as a formatting function for the trainer class.
     """
-
+    system = 'Please classify the following Claim into one of three labels based on the Evidence that follows it. The labels are SUPPORTS, if the Claim is supported by the Evidence; REFUTES, if the Claim is refuted by the Evidence; or NOT_ENOUGH_INFO, if the Claim is neither supported nor refuted by the Evidence. Output only one word: SUPPORTS, REFUTES, or NOT_ENOUGH_INFO. '
     output_texts = []        
     # Iterate over the data and format the text
-    for i in tqdm(range(len(data['question'])), desc='Formatting data'):
-        question=f"\n\n## QUESTION: {data['question'][i]}"
-        choices=f"\n\n## CHOICES: {data['choices'][i]['text']}"
-        user_input=question+choices+"\n\n## ANSWER: "
-        user_answer = f"{data['answerKey'][i]}"
+    for i in tqdm(range(len(data['claim'])), desc='Formatting data'):
+        claim=f"\n\n## Claim: {data['claim'][i]}"
+        evidence=f"\n\n## Evidence: {data['evidence']}"
+        user_input=system+claim+evidence+"\n\n## Label: "
+        user_answer = f"{data['evidence_label'][i]}"
         chat = [
             {"role": "user", "content": user_input},
             {"role": "assistant", "content": user_answer},
