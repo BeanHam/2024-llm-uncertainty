@@ -55,7 +55,7 @@ def get_dataset_slices(dataset: str) -> dict:
 
     # Download the dataset splits, including the dataset version if specified
     train_data = load_dataset(dataset, split='train')
-    val_data = load_dataset(dataset, split='validation')
+    val_data = load_dataset(dataset, split='valid')
     test_data = load_dataset(dataset, split='test')
     
     # Return the dictionary of dataset splits
