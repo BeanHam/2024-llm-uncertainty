@@ -60,7 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_steps', type=int, default=0.1, help='The number of steps between saving the model to the hub.')
     parser.add_argument('--logging_strategy', type=str, default='steps', help='The number of steps between logging.')
     parser.add_argument('--logging_steps', type=int, default=0.1, help='The number of steps between logging.')
-    parser.add_argument('--epoch', type=int, default=2, help='The length split of the dataset.')
+    parser.add_argument('--epoch', type=int, default=1, help='The length split of the dataset.')
     
     # Parse arguments
     args = parser.parse_args()
