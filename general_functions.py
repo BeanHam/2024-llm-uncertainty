@@ -151,7 +151,7 @@ def format_data_as_instructions(data: Mapping,
     # Iterate over the data and format the text
     for i in tqdm(range(len(data['claim'])), desc='Formatting data'):
         claim=f"\n\n## Claim: {data['claim'][i]}"
-        evidence=f"\n\n## Evidence: {data['evidence']}"
+        evidence=f"\n\n## Evidence: {data['evidence'][i]}"
         user_input=system+claim+evidence+"\n\n## Label: "
         user_answer = f"{data['evidence_label'][i]}"
         chat = [
