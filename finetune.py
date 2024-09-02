@@ -37,10 +37,12 @@ if __name__ == '__main__':
     parser.add_argument('--tune_modules', type=str, default='linear4bit', help='The modules to tune using LoRA.')
     parser.add_argument('--exclude_names', type=str, default='lm_head', help='The names of the modules to exclude from tuning.')
     parser.add_argument('--resume_from_checkpoint', type=str, default='False', help='Whether to resume from a checkpoint.')
+    
     # Dataset arguments
-    parser.add_argument('--dataset', type=str, default='allenai/ai2_arc', help='The dataset to use for fine-tuning.')    
+    parser.add_argument('--dataset', type=str, default='amandakonet/climate_fever_adopted', help='The dataset to use for fine-tuning.')    
     parser.add_argument('--max_seq_length', type=int, default=512, help='The maximum sequence length to use for fine-tuning.')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
+    
     # Training arguments
     parser.add_argument('--batch_size', type=int, default=1, help='The batch size to use for fine-tuning.')
     parser.add_argument('--gradient_accumulation_steps', type=int, default=4, help='The number of gradient accumulation steps to use for fine-tuning.')
@@ -50,13 +52,14 @@ if __name__ == '__main__':
     parser.add_argument('--fp16', type=str, default='True', help='Whether to use fp16.')
     parser.add_argument('--output_dir', type=str, default='outputs', help='The directory to save the fine-tuned model.')
     parser.add_argument('--optim', type=str, default='paged_adamw_8bit', help='The optimizer to use for fine-tuning.')
+    
     # Logging arguments
     parser.add_argument('--evaluation_strategy', type=str, default='steps', help='The evaluation strategy to use for fine-tuning.')
-    parser.add_argument('--eval_steps', type=int, default=0.2, help='The number of steps between evaluations.')
+    parser.add_argument('--eval_steps', type=int, default=0.1, help='The number of steps between evaluations.')
     parser.add_argument('--save_strategy', type=str, default='steps', help='The number of steps between logging.')
-    parser.add_argument('--save_steps', type=int, default=0.2, help='The number of steps between saving the model to the hub.')
+    parser.add_argument('--save_steps', type=int, default=0.1, help='The number of steps between saving the model to the hub.')
     parser.add_argument('--logging_strategy', type=str, default='steps', help='The number of steps between logging.')
-    parser.add_argument('--logging_steps', type=int, default=0.2, help='The number of steps between logging.')
+    parser.add_argument('--logging_steps', type=int, default=0.1, help='The number of steps between logging.')
     parser.add_argument('--epoch', type=int, default=2, help='The length split of the dataset.')
     
     # Parse arguments
@@ -77,21 +80,11 @@ if __name__ == '__main__':
     # ----------------------
     # Load Data
     # ----------------------
-    print('Downloading and preparing data...')
-    def clean_data(sample):
-        choices = sample['choices']['text']
-        for i in range(len(choices)):
-            choices[i]= string.ascii_uppercase[i]+': '+choices[i]
-        sample['choices']['text'] = choices
-
-        if sample['answerKey'] not in string.ascii_uppercase:
-            sample['answerKey'] = string.ascii_uppercase[int(sample['answerKey'])-1]
-        return sample
-        
-    data = load_dataset(args.dataset, "ARC-Easy")
-    train_data = data['train'].map(clean_data)
-    val_data = data['validation'].map(clean_data)
-    test_data = data['test'].map(clean_data)
+    print('Downloading and preparing data...')    
+    data = get_dataset_slices(args.dataset)
+    train_data = data['train']
+    val_data = data['validation']
+    test_data = data['test']
     
     # ----------------------
     # Load Model & Tokenizer
