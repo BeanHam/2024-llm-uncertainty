@@ -26,10 +26,11 @@ def main():
     #-------------------    
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_id', type=str, default='meta-llama/Meta-Llama-3-8B-Instruct')
-    parser.add_argument('--dataset', type=str, default='allenai/ai2_arc')
-    parser.add_argument('--device', type=str, default='cuda', help='The device to mount the model on.')
+    parser.add_argument('--dataset', type=str, default='amandakonet/climate_fever_adopted')
+    parser.add_argument('--device', type=str, default='auto', help='The device to mount the model on.')
     parser.add_argument('--hf_token_var', type=str, default='[your token]', help='hf login token')
     parser.add_argument('--use_model_prompt_defaults', type=str, default='llama3', help='Whether to use the default prompts for a model')
+    parser.add_argument('--finetuned', type=str, default='False', help='Whether to use the default prompts for a model')
     args = parser.parse_args()
     args.suffix = MODEL_SUFFIXES[args.use_model_prompt_defaults]
     args.save_path=f'inference_results/'
@@ -42,18 +43,8 @@ def main():
     # Load Data
     # ----------------------
     print('Downloading and preparing data...')
-    def clean_data(sample):
-        choices = sample['choices']['text']
-        for i in range(len(choices)):
-            choices[i]= string.ascii_uppercase[i]+': '+choices[i]
-        sample['choices']['text'] = choices
-
-        if sample['answerKey'] not in string.ascii_uppercase:
-            sample['answerKey'] = string.ascii_uppercase[int(sample['answerKey'])-1]
-        return sample
-        
-    data = load_dataset(args.dataset, "ARC-Easy")
-    test_data = data['test'].map(clean_data)
+    data = get_dataset_slices(args.dataset)    
+    test_data = data['test']
     
     # ----------------------
     # Checkpoints
@@ -63,41 +54,48 @@ def main():
         checkpoints.remove('.ipynb_checkpoints')
     if 'runs' in checkpoints:
         checkpoints.remove('runs')
-            
+
     # ----------------------
-    # loop through checkpoints
-    # ----------------------            
-    for checkpoint in checkpoints:
-        
-        print(f"{checkpoint}...")
+    # baseline
+    # ----------------------    
+    if args.finetuned=='False':
         model, tokenizer = get_model_and_tokenizer(args.model_id,
                                                    gradient_checkpointing=False,
                                                    quantization_type='4bit',
-                                                   device='auto')
-        model = PeftModel.from_pretrained(model, f'outputs_llama3/{checkpoint}/')
-
-        #------------
-        # inference
-        #------------
+                                                   device=args.device)
         model.eval()
         outputs  = evaluate_accuracy(model=model,
                                      tokenizer=tokenizer,
                                      data=test_data,
                                      max_new_tokens=10,
                                      remove_suffix=args.suffix)
-        np.save(args.save_path+f"{checkpoint}_outputs.npy", outputs)
-
-        #-------------------
-        # metric calculation
-        #-------------------
-        #for k, v in metrics.items(): print(f'   {k}: {v}')
-        #with open(args.save_path+f"{checkpoint}.json", 'w') as f: json.dump(metrics, f)        
+        np.save(args.save_path+f"baseline_outputs.npy", outputs)
+        
+    # ----------------------
+    # loop through checkpoints
+    # ----------------------
+    else:
+        for checkpoint in checkpoints:
             
-        ## clear cache
-        model.cpu()
-        del model, checkpoint
-        gc.collect()
-        torch.cuda.empty_cache()
+            print(f"{checkpoint}...")
+            model, tokenizer = get_model_and_tokenizer(args.model_id,
+                                                       gradient_checkpointing=False,
+                                                       quantization_type='4bit',
+                                                       device=args.device)
+            model = PeftModel.from_pretrained(model, f'outputs_llama3/{checkpoint}/')            
+            model.eval()
+            outputs  = evaluate_accuracy(model=model,
+                                         tokenizer=tokenizer,
+                                         data=test_data,
+                                         max_new_tokens=10,
+                                         remove_suffix=args.suffix)
+            np.save(args.save_path+f"{checkpoint}_outputs.npy", outputs)
+
+            ## clear cache
+            model.cpu()
+            del model, checkpoint
+            gc.collect()
+            torch.cuda.empty_cache()
 
 if __name__ == "__main__":
     main()
