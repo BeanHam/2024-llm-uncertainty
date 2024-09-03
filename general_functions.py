@@ -274,17 +274,17 @@ def evaluate_accuracy(model: AutoModelForCausalLM,
     """
     Evaluate a Hugging Face model on a dataset using three text summarization metrics.
     """
-                          
+    system = 'Please classify the following Claim into one of three labels based on the Evidence that follows it. The labels are SUPPORTS, if the Claim is supported by the Evidence; REFUTES, if the Claim is refuted by the Evidence; or NOT_ENOUGH_INFO, if the Claim is neither supported nor refuted by the Evidence. Output only one word: SUPPORTS, REFUTES, or NOT_ENOUGH_INFO. '
     outputs = []
     # Iterate over the test set
     for i in tqdm(range(len(data))):
 
-        question=f"\n\n## QUESTION: {data['question'][i]}"
-        choices=f"\n\n## CHOICES: {data['choices'][i]['text']}"
-        user_input=question+choices+"\n\n## ANSWER: "
+        claim=f"\n\n## Claim: {data['claim'][i]}"
+        evidence=f"\n\n## Evidence: {data['evidence'][i]}"
+        user_input=system+claim+evidence+"\n\n## Label: "
         chat = [{"role": "user", "content": user_input}]
         input_data = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
-                    
+        
         # Calculate the position of the start of the output string
         start_decode = len(tokenizer.encode(input_data, truncation=True, max_length=max_tokens))
         input_ids = tokenizer(input_data, return_tensors='pt', truncation=True, max_length=max_tokens).to(model.device)
