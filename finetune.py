@@ -83,7 +83,7 @@ if __name__ == '__main__':
     print('Downloading and preparing data...')    
     data = get_dataset_slices(args.dataset)
     train_data = data['train']
-    val_data = data['validation']
+    val_data = data['val']
     test_data = data['test']
     
     # ----------------------
